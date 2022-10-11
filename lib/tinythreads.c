@@ -331,6 +331,8 @@ static void scheduler_RR(void){
  */
 static void scheduler_RM(void){
 	// To be implemented in Assignment 4!!!
+    respawn_periodic_tasks();
+    yield();
 }
 
 /** @brief Schedules periodic tasks using Earliest Deadline First  (EDF) 
@@ -346,7 +348,8 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
-    scheduler_RR();
+    printTinyThreadsUART();
+    scheduler_RM();
 }
 
 /** @brief Prints via UART the content of the main variables in TinyThreads
