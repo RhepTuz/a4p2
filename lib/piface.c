@@ -244,6 +244,11 @@ void piface_setLine(int l){
 void piface_clear(void)
 {
     /* clear display */
+
+     nrChars = 0;
+     mult16 = 1;
+     mult32 = 1;
+
     lcd_write_cmd(0x01);
 }
 /** @brief Sets the cursor on a specific row and column

@@ -92,8 +92,20 @@ static void enqueue(thread p, thread *queue) {
 		*queue = p;
 	} else {
 		thread q = *queue;
-		while (q->next)
-			q = q->next;
+
+        if(p->Period_Deadline < q->Period_Deadline){
+            *queue = p;
+            p->next = q;
+            return;
+        }
+		while (q->next) {
+            if(p->Period_Deadline < q->next->Period_Deadline){
+                p->next = q->next;
+                break;
+            }
+            q = q->next;
+
+        }
 		q->next = p;
 	}
 }
@@ -222,6 +234,32 @@ void unlock(mutex *m) {
  */
 void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, unsigned int rel_deadline) {
 	// To be implemented in Assignment 4!!!
+
+    thread newp;
+    DISABLE();
+
+    if (!initialized)
+        initialize();
+
+    newp = dequeue(&freeQ);
+    newp->Period_Deadline = deadline;
+    newp->Rel_Period_Deadline = rel_deadline;
+    newp->function = function;
+    newp->arg = arg;
+    newp->next = NULL;
+    if (setjmp(newp->context) == 1) {
+        ENABLE();
+        current->function(current->arg);
+        DISABLE();
+        print2uart("\nTHREAD: %d IS NOW DONE AT %d",current->idx,ticks);
+        enqueue(current, &doneQ);
+        current = NULL;
+        dispatch(dequeue(&readyQ));
+    }
+    SETSTACK(&newp->context, &newp->stack);
+    enqueue(newp, &readyQ);
+    ENABLE();
+
 }
 
 
@@ -231,6 +269,9 @@ void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, u
  */
 static void sortX(thread *queue) {
 	// To be implemented in Assignment 4!!!
+
+
+
 }
 
 /** @brief Removes a specific element from the queue.
@@ -243,6 +284,39 @@ static thread dequeueItem(thread *queue, int idx) {
  */
 void respawn_periodic_tasks(void) {
 	// To be implemented in Assignment 4!!!
+    thread newp;
+    DISABLE();
+    uart_puts("\nIM IN RESPAWN");
+
+    miniPrintDoneQ();
+
+    if (!doneQ){
+        uart_puts("\nI LEFT RESPAWN DUE TO NO ELEMENTS IN DONEQ");
+        ENABLE();
+
+        return;
+    }
+
+
+    while(doneQ) {
+
+        uart_puts("\nTHERE ARE ELEMENTS IN DONEQ");
+
+        newp = dequeue(&doneQ);
+        newp->Period_Deadline += newp->Rel_Period_Deadline;
+        if (setjmp(newp->context) == 1) {
+            ENABLE();
+            current->function(current->arg);
+            DISABLE();
+            enqueue(current, &doneQ);
+            current = NULL;
+            dispatch(dequeue(&readyQ));
+        }
+        SETSTACK(&newp->context, &newp->stack);
+        enqueue(newp, &readyQ);
+    }
+    ENABLE();
+
 }
 
 /** @brief Schedules tasks using time slicing
@@ -309,6 +383,20 @@ void printTinyThreadsUART(void) {
 		print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);		
 		t = t->next;
 	}	
+}
+
+void miniPrintDoneQ(){
+
+    thread t;
+    t = threads;
+    print2uart("\ndoneQ - Called by t[%i] arg: %d\n",current->idx, current->arg);
+    t=doneQ;
+    while(t)
+    {
+        print2uart("t[%i] @%#010x arg: %d dl: %d\n", t->idx, t, t->arg, t->Period_Deadline);
+        t = t->next;
+    }
+
 }
 
 /** @brief Prints on the PiFace the content of the main variables in TinyThreads
