@@ -52,6 +52,10 @@ thread freeQ 	= threads;
 thread readyQ	= NULL;
 // @brief Points to a queue of thread_block instances in the threads array that have finished execution
 thread doneQ	= NULL;
+// @brief Temp queue
+thread tempQ = NULL;
+
+thread  tempQ2 = NULL;
 
 thread current	= &initp;
 
@@ -125,6 +129,27 @@ static thread dequeue(thread *queue) {
 	return p;
 }
 
+static thread deqeueuSel(thread* queue, int index){
+    thread p;
+    thread prev;
+
+    if(!queue){
+        return NULL;
+    }
+
+    int i = 0;
+    p = *queue;
+    while(p && i < index){
+        prev = p;
+        p = p->next;
+        i++;
+    }
+
+    prev->next = p->next;
+    p->next = NULL;
+
+    return p;
+}
 /** @brief Starts or resumes the execution of the thread
  * select to execute.
  */
@@ -285,9 +310,9 @@ static thread dequeueItem(thread *queue, int idx) {
 void respawn_periodic_tasks(void) {
 	// To be implemented in Assignment 4!!!
     thread newp;
+    thread old;
     DISABLE();
     uart_puts("\nIM IN RESPAWN");
-
     miniPrintDoneQ();
 
     if (!doneQ){
@@ -296,14 +321,27 @@ void respawn_periodic_tasks(void) {
 
         return;
     }
+    int i = 0;
 
-
-    while(doneQ) {
-
-        uart_puts("\nTHERE ARE ELEMENTS IN DONEQ");
-
+    while(doneQ){
         newp = dequeue(&doneQ);
-        newp->Period_Deadline += newp->Rel_Period_Deadline;
+
+        if(ticks % newp->Rel_Period_Deadline == 0){
+            enqueue(newp,&tempQ);
+        }
+        else{
+            enqueue(newp,&tempQ2);
+        }
+    }
+    while(tempQ2){
+        newp = dequeue(&tempQ2);
+        enqueue(newp,&doneQ);
+    }
+
+    while(tempQ) {
+
+        //newp->Period_Deadline += newp->Rel_Period_Deadline;
+        newp = dequeue(&tempQ);
         if (setjmp(newp->context) == 1) {
             ENABLE();
             current->function(current->arg);
@@ -312,12 +350,12 @@ void respawn_periodic_tasks(void) {
             current = NULL;
             dispatch(dequeue(&readyQ));
         }
-        SETSTACK(&newp->context, &newp->stack);
-        enqueue(newp, &readyQ);
-    }
+            SETSTACK(&newp->context, &newp->stack);
+            enqueue(newp, &readyQ);
+        }
     ENABLE();
-
 }
+
 
 /** @brief Schedules tasks using time slicing
  */
@@ -348,6 +386,7 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
+    print2uart("\n\nTicks: %d\n",ticks);
     printTinyThreadsUART();
     scheduler_RM();
 }
