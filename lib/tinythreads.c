@@ -276,7 +276,7 @@ void spawnWithDeadline(void (* function)(int), int arg, unsigned int deadline, u
         ENABLE();
         current->function(current->arg);
         DISABLE();
-        print2uart("\nTHREAD: %d IS NOW DONE AT %d",current->idx,ticks);
+        //print2uart("\nTHREAD: %d IS NOW DONE AT %d",current->idx,ticks);
         enqueue(current, &doneQ);
         current = NULL;
         dispatch(dequeue(&readyQ));
@@ -312,11 +312,11 @@ void respawn_periodic_tasks(void) {
     thread newp;
     thread old;
     DISABLE();
-    uart_puts("\nIM IN RESPAWN");
-    miniPrintDoneQ();
+    //uart_puts("\nIM IN RESPAWN");
+    //miniPrintDoneQ();
 
     if (!doneQ){
-        uart_puts("\nI LEFT RESPAWN DUE TO NO ELEMENTS IN DONEQ");
+        //uart_puts("\nI LEFT RESPAWN DUE TO NO ELEMENTS IN DONEQ");
         ENABLE();
 
         return;
@@ -386,8 +386,8 @@ static void scheduler_EDF(void){
  */
 void scheduler(void){
 	// To be implemented in Assignment 4!!!
-    print2uart("\n\nTicks: %d\n",ticks);
-    printTinyThreadsUART();
+    //print2uart("\n\nTicks: %d\n",ticks);
+    //printTinyThreadsUART();
     scheduler_RM();
 }
 

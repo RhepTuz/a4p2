@@ -123,20 +123,20 @@ static void lcd_pulse(uint8_t val){
 }
 
 static void lcd_write_cmd(uint8_t cmd){
-	 lcd_busy_wait();
+    lcd_busy_wait();
 	/* write high nibble */
 	lcd_pulse( LCD_BL | (cmd >> 4)   );
-	lcd_busy_wait();
+    LCD_DELAY;
 	/* write low nibble */
     lcd_pulse( LCD_BL | (cmd & 0x0F) );
-    lcd_busy_wait();
+    LCD_DELAY;
 }
 
 static void lcd_write_data(uint8_t data){
-	lcd_busy_wait();
+    lcd_busy_wait();
 	/* write high nibble */
 	lcd_pulse( LCD_BL | LCD_RS | (data >> 4)   );
-	lcd_busy_wait();
+    LCD_DELAY;
     /* write low nibble */
     lcd_pulse( LCD_BL | LCD_RS | (data & 0x0F) );
     //lcd_busy_wait();
@@ -191,11 +191,11 @@ void piface_putc(char c)
 
     nrChars = (nrChars + 1) % 32;
     if(nrChars == 16 * mult16){
-        piface_setLine(2);
+        //piface_setLine(2);
         mult16++;
     }
     else if(nrChars == 32 * mult32){
-        piface_setLine(1);
+        //piface_setLine(1);
         mult32++;
     }
 
@@ -319,22 +319,22 @@ void print_at_seg(int seg, int num) {
 
         case(0):
             piface_set_cursor(0,0);
-            lcd_busy_wait();
+
             piface_puts(str);
             break;
         case(1):
             piface_set_cursor(8,0);
-            lcd_busy_wait();
+
             piface_puts(str);
             break;
         case(2):
             piface_set_cursor(0,1);
-            lcd_busy_wait();
+
             piface_puts(str);
             break;
         case(3):
             piface_set_cursor(8,1);
-            lcd_busy_wait();
+
             piface_puts(str);
             break;
         default:

@@ -108,22 +108,23 @@ void computeSomething(int seg) {
     volatile int t = ticks;
     ExpStruct* value = iexp(10);
     //printf_at_seg(seg % 4, "S%d: %d", seg, t);
-    //print_at_seg(seg % 4, value->expInt);
-
+    lock(&mute);
+    print_at_seg(seg % 4, t);
+    unlock(&mute);
     char test[64];
     sprintf(test,"\nI ran computeSomething seg %d with ticks at %d",seg,ticks);
-    uart_puts(test);
+    //uart_puts(test);
 
     while(t==ticks);
 }
 
 int main() {
-    //piface_init();
-    //piface_puts("DT8025 - A4P2");
-    uart_init();
-    uart_puts("testlmao");
+    piface_init();
+    piface_puts("DT8025 - A4P2");
+    //uart_init();
+    //uart_puts("testlmao");
     RPI_WaitMicroSeconds(2000000);
-    //piface_clear();
+    piface_clear();
 
     spawnWithDeadline(computeSomething, 0, 5, 5);
     spawnWithDeadline(computeSomething, 1, 3, 3);
@@ -133,6 +134,6 @@ int main() {
 
     while (1) {
         no_operation();
-        uart_puts("\nIm in no-op while");
+        //print_at_seg(3, ticks);
     }
 }

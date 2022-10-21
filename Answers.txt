@@ -1,0 +1,4 @@
+- What is the result and implication of removing the code while(t==ticks)? Elaborate on your answer
+* Removing the code snippet would allow computeSomething() to finish its execution without having to wait one whole second.
+This faster execution would cause the kernel to quickly run out of computeSomething() threads in the readyQ and would
+instead jump back to the main() function while waiting for the computeSomething() functions to respawn.
